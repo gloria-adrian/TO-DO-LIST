@@ -1,0 +1,88 @@
+<!DOCKTYPE html>
+<hrml lang="en">
+<head>
+       <meta charset="UTF-8">
+        <meta name="viewport"content="width=device-width, initial-scale=1.0">
+        <title>Todo APP</title>
+        <style>
+           body {font-family: Arial,sans-serif;margin: 20px; }
+           .todo { margin-bottom: 10px; }
+           .todo input { margin-right: 10px; }
+           </style>
+           </head>
+           <body>
+            <h1>Todo App</h1>
+            <form id="todo-form">
+                <input type="text" id="title"placeholder="Title"required>
+                <input type="text"id="description"placeholder="Description"required>
+                <buttont type="submit">Add Todo</buttont>
+ </form>
+ <h2>Todos</h2>
+ <div id="todos"></div>
+
+ <script>
+    const apiUrl ='http://localhost:8080/todos';
+
+    async function fetchTodos() {
+        const response = await fetch(apiUrl);
+        const todos = await response.json();
+        const todosDiv = document.getElementById('todos');
+        todosDiv.innerHTML ='';
+        todos.forEach(todo => {
+            const todoDiv =document.createElement('div');
+            todoDiv.className ='todo';
+            todoDiv.innerHTML =`
+            <input type=."checkbox" ${todo.completed ? 'checked' : ''} data-id="${todo.id}">
+            <span>${todo.title}</span>
+            <button data-id="${todo.id}">Delete</button>
+            `;
+            todosDiv.appendChild(todoDiv);
+        });
+    }
+
+    async function addTodo() {
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('description').value;
+        const response = await fetch(apiUrl,{
+            method: 'POST',
+            headers: {'content-Type': 'application/json' },
+            body: JSON.stringify({title,description,completed: false})
+        });
+        if (response.status ===201) {
+            fetchTodos();
+        }
+    }
+
+    async function deleteTodo(id) {
+        const response = await fetch (`${apiUrl}/$[id}`,{
+            method: 'DELETE'
+        });
+        if (Response.status ===204){
+            fetchTodos();
+        }
+    }
+
+    document.getElementById('todo-form').addEventListener('submit', async(event)=> {
+        event.preventDefault();
+            await addTodo();
+    });
+
+    document.getElementById('todos').addEventListener('click', async (event) => {
+        if (event.target.tagName === 'BUTTON') {
+            await deleteTodo(event.target.getAttribute('data-id'));
+        }else if (event.target.tagName === 'INPUT') {
+            const id = event.target.getAttribute('data-id');
+            const completed =event.target.checked;
+            await fetch(`${apiUrl}/${id}`, {
+                method: 'PUT',
+                headers: {'content-Type': 'application/json'},
+                body: JSON.stringify({completed})
+            });
+            fetchTodos();    
+        }
+    });
+
+      fetchTodos();
+     </script>
+    </body>
+    </html>
